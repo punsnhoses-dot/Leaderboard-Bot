@@ -829,21 +829,20 @@
             buildQuizTypeFilter();
             displayHosts();
             displayFilterSelector('cities');
-            displayFilterSelecleaderboardCSV !== 'undefined') {
-                try {
-                    const venueData = parseVenueCSV(window.leaderboardCSV);
-                    allData = aggregateHostData(venueData);
-                    buildQuizTypeFilter();
-                    displayHosts();
-                    displayFilterSelector('cities');
-                    displayFilterSelector('counties');
-                    displayFilterSelector('countries');
-                } catch (error) {
-                    console.error('Error loading host leaderboard data:', error);
-                    document.getElementById('hostsWidget').innerHTML = '<div class="no-results">Error loading data. Please try refreshing the page.</div>';
-                }
-            } else {
-                document.getElementById('hostsWidget').innerHTML = '<div class="no-results">Data file not found. Please check that 
+            displayFilterSelector('counties');
+            displayFilterSelector('countries');
+            
+            document.getElementById('searchBox').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (!term) {
+                resultsDiv.innerHTML = '';
+                document.querySelectorAll('.list-item, .podium-place').forEach(item => {
                     item.classList.remove('highlighted');
                 });
                 return;
@@ -885,9 +884,10 @@
 
         // Initialize when data loads
         window.addEventListener('DOMContentLoaded', function() {
-            if (typeof window.hostLeaderboardCSV !== 'undefined') {
+            if (typeof window.leaderboardCSV !== 'undefined') {
                 try {
-                    allData = parseCSV(window.hostLeaderboardCSV);
+                    const venueData = parseVenueCSV(window.leaderboardCSV);
+                    allData = aggregateHostData(venueData);
                     buildQuizTypeFilter();
                     displayHosts();
                     displayFilterSelector('cities');
@@ -898,7 +898,7 @@
                     document.getElementById('hostsWidget').innerHTML = '<div class="no-results">Error loading data. Please try refreshing the page.</div>';
                 }
             } else {
-                document.getElementById('hostsWidget').innerHTML = '<div class="no-results">Data file not found. Please check that host-leaderboard-data.js is loaded.</div>';
+                document.getElementById('hostsWidget').innerHTML = '<div class="no-results">Data file not found. Please check that leaderboard-data.js is loaded.</div>';
             }
         });
     </script>
