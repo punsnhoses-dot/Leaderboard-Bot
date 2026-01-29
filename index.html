@@ -31,30 +31,6 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .upload-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .upload-btn {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 16px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-        }
-
-        .upload-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-        }
-
         .search-container {
             margin-bottom: 30px;
             text-align: center;
@@ -382,6 +358,13 @@
             font-weight: bold;
         }
 
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 1.8em; }
             .podium-container { 
@@ -406,13 +389,6 @@
     <div class="container">
         <h1>🏆 Pub Quiz Leaderboards 🏆</h1>
 
-        <div class="upload-section">
-            <input type="file" id="fileInput" accept=".csv" style="display: none;">
-            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                📁 Upload CSV Data
-            </button>
-        </div>
-
         <div class="search-container">
             <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search for a venue...">
             <div id="searchResults" class="search-results"></div>
@@ -427,22 +403,18 @@
             <button class="tab" onclick="switchTab('countries')">By Country</button>
         </div>
 
-        <div id="venuesWidget" class="widget active"></div>
+        <div id="venuesWidget" class="widget active">
+            <div class="loading">Loading leaderboard data...</div>
+        </div>
         <div id="citiesWidget" class="widget"></div>
         <div id="countiesWidget" class="widget"></div>
         <div id="countriesWidget" class="widget"></div>
     </div>
 
+    <!-- Load data from external file -->
+    <script src="leaderboard-data.js"></script>
+    
     <script>
-        // PASTE YOUR CSV DATA HERE (between the backticks)
-        const embeddedCSV = `Ranking,Venue,Host Name,Average Quiz rating,Number of Quiz reviews,Average Host rating,Number of Host reviews,City,County,Country,Quiz type,
-1,Druids Arms,Anne Bailey,5,2,5,2,Maidstone,Kent,United Kingdom,Phone or tablet quiz,
-2,The Pippin,Marc Coates,5,2,5,2,Maidstone,Kent,United Kingdom,Phone or tablet quiz,
-3,John Brunt VC,Steve Watson,5,1,5,1,Paddock Wood,Kent,United Kingdom,Phone or tablet quiz,
-4,Coach House,Jude Shorter-Wickett,5,1,5,1,Maidstone,Kent,United Kingdom,Phone or tablet quiz,
-5,Wealden Hall,Charley Parker,5,1,5,1,Maidstone,Kent,United Kingdom,Phone or tablet quiz,
-6,The Wateringbury,Louise Cannon,5,1,5,1,Wateringbury,Kent,United Kingdom,Pen and paper quiz,`;
-
         let allData = [];
         let currentTab = 'venues';
         let currentFilter = null;
@@ -548,7 +520,7 @@
             `;
 
             if (allData.length === 0) {
-                html += '<div class="no-results">No data loaded. Please upload a CSV file.</div>';
+                html += '<div class="no-results">No data loaded.</div>';
             } else if (data.length === 0) {
                 html += '<div class="no-results">No venues found for this quiz type.</div>';
             } else {
@@ -612,7 +584,7 @@
             `;
 
             if (allData.length === 0) {
-                html += '<div class="no-results">No data loaded. Please upload a CSV file.</div>';
+                html += '<div class="no-results">No data loaded.</div>';
             } else if (options.length === 0) {
                 html += '<div class="no-results">No data available for this quiz type.</div>';
             } else {
@@ -853,63 +825,24 @@
             }
         });
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
+        // Initialize when data loads
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.leaderboardCSV !== 'undefined') {
                 try {
-                    allData = parseCSV(event.target.result);
-                    isExpanded = {};
-                    currentFilter = null;
-                    currentQuizType = 'All';
-
+                    allData = parseCSV(window.leaderboardCSV);
                     buildQuizTypeFilter();
                     displayVenues();
                     displayFilterSelector('cities');
                     displayFilterSelector('counties');
                     displayFilterSelector('countries');
-
-                    // Hide the upload section after successful load
-                    document.querySelector('.upload-section').style.display = 'none';
-
-                    alert(`✅ Successfully loaded ${allData.length} venues!`);
                 } catch (error) {
-                    console.error(error);
-                    alert('❌ Error loading file. Please check the CSV format.');
+                    console.error('Error loading leaderboard data:', error);
+                    document.getElementById('venuesWidget').innerHTML = '<div class="no-results">Error loading data. Please try refreshing the page.</div>';
                 }
-            };
-            reader.readAsText(file);
-        });
-
-        displayVenues();
-        displayFilterSelector('cities');
-        displayFilterSelector('counties');
-        displayFilterSelector('countries');
-
-        // Auto-load embedded CSV data on page load
-        if (embeddedCSV && embeddedCSV.trim()) {
-            try {
-                allData = parseCSV(embeddedCSV);
-                if (allData.length > 0) {
-                    isExpanded = {};
-                    currentFilter = null;
-                    currentQuizType = 'All';
-
-                    buildQuizTypeFilter();
-                    displayVenues();
-                    displayFilterSelector('cities');
-                    displayFilterSelector('counties');
-                    displayFilterSelector('countries');
-
-                    // Hide upload section since data is embedded
-                    document.querySelector('.upload-section').style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error loading embedded CSV:', error);
+            } else {
+                document.getElementById('venuesWidget').innerHTML = '<div class="no-results">Data file not found. Please check that leaderboard-data.js is loaded.</div>';
             }
-        }
+        });
     </script>
 </body>
 </html>
