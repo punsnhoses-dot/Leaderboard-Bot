@@ -1,4 +1,4 @@
-// Leaderboard CSV Data
+// Leaderboard CSV Datas
 // To update: Just replace the CSV text between the backticks and commit to GitHub
 
 window.leaderboardCSV = `Ranking,Venue,Host Name,Average Quiz rating,Number of Quiz reviews,Average Host rating,Number of Host reviews,City,County,Country,Quiz type,
